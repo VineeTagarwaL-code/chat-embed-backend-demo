@@ -1,0 +1,10 @@
+services:
+  jigsaw-doc:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "3005:3001"
+    env_file:
+      - ./.env
+    restart: always
