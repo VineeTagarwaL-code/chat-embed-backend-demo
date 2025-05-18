@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jigsaw Chat Widget Test</title>
+</head>
+
+<body>
+    <h1>Hello</h1>
+    <script>
+        window.process = { env: { NODE_ENV: 'production' } };
+       
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script>
+         window.chatWidgetConfig = {
+            position: 'bottom-right',
+            botName: 'Jigsaw AI',
+            welcomeMessage: 'Hello! I\'m your AI assistant. How can I help you today?',
+            width: '400px',
+            primaryColor: '#f82c2f',
+            secondaryColor: '#f82c2f',
+            height: '600px',
+            suggestedQuestions: [
+                'What can you help me with?',
+                'How does this work?',
+                'Tell me more about Jigsaw AI'
+            ],
+            botAvatarUrl: 'https://mintlify.s3.us-west-1.amazonaws.com/jigsaw-13/logo/logo.svg' // Replace with your actual avatar URL
+        };
+        (function () {
+            const script = document.createElement('script');
+            script.src = 'https://jigsaw-chat-embed.vercel.app/widget-bundle.umd.js'; // Replace with your actual domain
+            script.async = true;
+            script.onload = function () {
+                if (window.initChatWidget) {
+                    window.initChatWidget(window.chatWidgetConfig || {});
+                }
+            };
+            document.head.appendChild(script);
+        })(); 
+    </script>
+</body>
+
+</html>

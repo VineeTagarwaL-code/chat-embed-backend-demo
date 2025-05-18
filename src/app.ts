@@ -1,31 +1,42 @@
 import express, { Request, Response } from 'express';
-
-import chatRouter from './chat';
-import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
+import messageRouter from './routes/message';
+import cors from 'cors';
+import { vercelClient } from './lib/vercel';
+import { PineconeClient } from './lib/pinecone';
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Global rate limiter
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cors());
+
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
+  windowMs: 15 * 60 * 1000, 
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(globalLimiter); // Apply rate limiting globally
+app.use(globalLimiter);
 
-// Routes
-app.use('/api', chatRouter);
+(async () => {
+  try {
+    await vercelClient.initialize();
+    console.log('Vercel client initialized successfully');
 
-// Test route
+    await PineconeClient.getInstance().initialize();
+    console.log('Pinecone client initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize clients:', error);
+    process.exit(1);
+  }
+})();
+
+app.use('/api', messageRouter);
+
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to Jigsaw Documentation API' });
 });
@@ -34,9 +45,10 @@ app.get("/health", (req: Request, res: Response) => {
   res.json({ message: "OK" });
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
 
 export default app; 
