@@ -54,7 +54,7 @@ app.use(globalLimiter);
 app.use('/api', messageRouter);
 
 app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to Jigsaw Documentation API' });
+  res.json({ message: 'Welcome to Chat Embed API' });
 });
 
 app.get("/health", (req: Request, res: Response) => {
