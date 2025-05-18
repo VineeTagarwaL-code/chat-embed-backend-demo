@@ -4,6 +4,11 @@ import messageRouter from './routes/message';
 import cors from 'cors';
 import { vercelClient } from './lib/vercel';
 import { PineconeClient } from './lib/pinecone';
+import morgan from 'morgan';
+import { formatRequestLog } from './utils';
+import { logger } from './lib/logger';
+
+const MORGAN_FORMAT = ':remote-addr :method :url :status :response-time ms';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -11,6 +16,17 @@ const port = process.env.PORT || 3001;
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
+
+app.use(
+  morgan(MORGAN_FORMAT, {
+    // skip: (req) => req.url.includes('health'),
+    stream: {
+      write: (message) => {
+        logger.info(formatRequestLog(message));
+      },
+    },
+  })
+);
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -25,12 +41,12 @@ app.use(globalLimiter);
 (async () => {
   try {
     await vercelClient.initialize();
-    console.log('Vercel client initialized successfully');
+    logger.info('Vercel client initialized successfully');
 
     await PineconeClient.getInstance().initialize();
-    console.log('Pinecone client initialized successfully');
+    logger.info('Pinecone client initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize clients:', error);
+    logger.error('Failed to initialize clients:', error);
     process.exit(1);
   }
 })();
@@ -47,7 +63,7 @@ app.get("/health", (req: Request, res: Response) => {
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    logger.info(`Server is running on port ${port}`);
   });
 }
 
